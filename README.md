@@ -4,7 +4,7 @@
 
 ## 목차
 
-- **Unit 1: Sui 프로젝트 첫걸음 **
+- **Unit 1: Sui 프로젝트 첫걸음**
     - [환경 설정](./unit-one/lessons/1_set_up_environment.md)
     - [Sui 프로젝트 구조](./unit-one/lessons/2_sui_project_structure.md)
     - [Custom Types & Abilities](./unit-one/lessons/3_custom_types_and_abilities.md)
