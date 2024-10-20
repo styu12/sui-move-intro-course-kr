@@ -6,13 +6,21 @@
 ///
 module hello_world::hello_world {
     use std::string;
-    use sui::object::UID;
 
-    /// HelloWorldObject 구조체를 정의합니다.
-    /// key, store 능력을 가지고 있기 때문에 글로벌 스토리지에서 Sui Object로 사용됩니다.
+    /// Defines the HelloWorldObject structure.
+    /// It has key and store abilities, so it is used as a Sui Object in global storage.
     public struct HelloWorldObject has key, store {
         id: UID,
         text: string::String,
+    }
+
+    #[allow(lint(self_transfer))]
+    public entry fun mint(ctx: &mut TxContext) {
+        let object = HelloWorldObject {
+            id: object::new(ctx),
+            text: string::utf8(b"Hello, World!"),
+        };
+        transfer::public_transfer(object, tx_context::sender(ctx));
     }
 }
 
