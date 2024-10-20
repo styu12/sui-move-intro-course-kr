@@ -4,7 +4,7 @@
 /// A basic object example for Sui Move, part of the Sui Move intro course:
 /// https://github.com/sui-foundation/sui-move-intro-course
 /// 
-module transcript::transcript_wip_2 {
+module transcript::transcript_wip_3 {
 
     public struct WrappableTranscript has key, store {
         id: UID,
@@ -19,10 +19,30 @@ module transcript::transcript_wip_2 {
         intended_address: address,
     }
 
+    public struct TeacherCap has key {
+        id: UID
+    }
+
     // Error code for when a non-intended address tries to unpack the transcript wrapper
     const ENotIntendedAddress: u64 = 1;
 
-    public entry fun create_wrappable_transcript_object(history: u8, math: u8, literature: u8, ctx: &mut TxContext) {
+    /// Module initializer is called only once on module publish.
+    fun init(ctx: &mut TxContext) {
+        transfer::transfer(TeacherCap {
+            id: object::new(ctx)
+        }, tx_context::sender(ctx))
+    }
+
+    public entry fun add_additional_teacher(_: &TeacherCap, new_teacher_address: address, ctx: &mut TxContext){
+        transfer::transfer(
+            TeacherCap {
+                id: object::new(ctx)
+            },
+        new_teacher_address
+        )
+    }
+
+    public entry fun create_wrappable_transcript_object(_: &TeacherCap, history: u8, math: u8, literature: u8, ctx: &mut TxContext) {
         let wrappableTranscript = WrappableTranscript {
             id: object::new(ctx),
             history,
@@ -38,12 +58,12 @@ module transcript::transcript_wip_2 {
     }
 
     // You are allowed to view and edit the score but not allowed to delete it
-    public entry fun update_score(transcriptObject: &mut WrappableTranscript, score: u8){
+    public entry fun update_score(_: &TeacherCap, transcriptObject: &mut WrappableTranscript, score: u8){
         transcriptObject.literature = score
     }
 
     // You are allowed to do anything with the score, including view, edit, delete the entire transcript itself.
-    public entry fun delete_transcript(transcriptObject: WrappableTranscript){
+    public entry fun delete_transcript(_: &TeacherCap, transcriptObject: WrappableTranscript){
         let WrappableTranscript {id, history: _, math: _, literature: _ } = transcriptObject;
         object::delete(id);
     }
