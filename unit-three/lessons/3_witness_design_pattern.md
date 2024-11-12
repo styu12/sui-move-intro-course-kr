@@ -1,43 +1,42 @@
-# The Witness Design Pattern
+# Witness 디자인 패턴
 
-Next, we need to understand the witness pattern to peek under the hood of how a fungible token is implemented in Sui Move. 
+다음으로, Sui Move에서 대체 가능 토큰이 어떻게 구현되는지 이해하기 위해 **Witness 패턴**을 살펴보겠습니다.
 
-Witness is a design pattern used to prove that the resource or type in question, `A`, can be initiated only once after the ephemeral `witness` resource has been consumed. The `witness` resource must be immediately consumed or dropped after use, ensuring that it cannot be reused to create multiple instances of `A`.
+**Witness**는 특정 리소스나 타입 `A`가 일회성 리소스인 `witness`가 소모된 후에만 한 번 초기화될 수 있음을 보장하는 디자인 패턴입니다. `witness` 리소스는 사용 후 즉시 소모되거나 삭제되어야 하며, 이를 통해 여러 인스턴스를 생성하는 데 재사용되지 않도록 합니다. 즉 `A` 는 단 한 번만 초기화됩니다.
 
-## Witness Pattern Example
+## Witness 패턴 예제
 
-In the below example, the `witness` resource is `PEACE`, while the type `A` that we want to control the instantiation of is `Guardian`. 
+다음 예제에서 `witness` 리소스는 `PEACE`이며, 초기화하려는 타입 `A`는 `Guardian`입니다.
 
-The `witness` resource type must have the `drop` keyword so that this resource can be dropped after being passed into a function. We see that the instance of `PEACE` resource is passed into the `create_guardian` method and dropped (note the underscore before `witness`), ensuring that only one instance of `Guardian` can be created.
+`witness` 리소스 타입에는 `drop` 키워드가 필요하며, 이를 통해 함수에 전달된 후 삭제할 수 있습니다. `PEACE` 리소스의 인스턴스는 `create_guardian` 메서드로 전달되어 바로 소모됩니다(변수 앞의 언더스코어에 주목). 이렇게 함으로써 `Guardian`의 인스턴스가 단 한 번만 생성되도록 보장합니다.
 
 ```rust
-    /// Module that defines a generic type `Guardian<T>` which can only be
-    /// instantiated with a witness.
+    /// 제네릭 타입 `Guardian<T>`를 정의하는 모듈로, 이 타입은
+    /// witness를 통해서만 초기화될 수 있습니다.
     module witness::peace {
         use sui::object::{Self, UID};
         use sui::transfer;
         use sui::tx_context::{Self, TxContext};
 
-        /// Phantom parameter T can only be initialized in the `create_guardian`
-        /// function. But the types passed here must have `drop`.
+        /// Phantom 매개변수 T는 `create_guardian` 함수에서만 초기화 가능합니다.
+        /// T는 `drop` 능력을 가져야 합니다.
         public struct Guardian<phantom T: drop> has key, store {
             id: UID
         }
 
-        /// This type is the witness resource and is intended to be used only once.
+        /// 이 타입은 witness 리소스이며, 일회성 사용을 의도합니다.
         public struct PEACE has drop {}
 
-        /// The first argument of this function is an actual instance of the
-        /// type T with `drop` ability. It is dropped as soon as received.
+        /// 이 함수의 첫 번째 인수는 `drop` 능력을 가진 T 타입의 실제 인스턴스입니다.
+        /// 수신 즉시 소모됩니다.
         public fun create_guardian<T: drop>(
             _witness: T, ctx: &mut TxContext
         ): Guardian<T> {
             Guardian { id: object::new(ctx) }
         }
 
-        /// Module initializer is the best way to ensure that the
-        /// code is called only once. With `Witness` pattern it is
-        /// often the best practice.
+        /// 모듈 초기화(init) 함수는 한 번만 호출되도록 보장하는 좋은 방법입니다.
+        /// Witness 패턴과 함께 사용하는 경우 가장 좋은 관행입니다.
         fun init(witness: PEACE, ctx: &mut TxContext) {
             transfer::transfer(
                 create_guardian(witness, ctx),
@@ -47,27 +46,27 @@ The `witness` resource type must have the `drop` keyword so that this resource c
     }
 ```
 
-*The example above is modified from the excellent book [Sui Move by Example](https://examples.sui.io/patterns/witness.html) by [Damir Shamanaev](https://github.com/damirka).*
+*위 예제는 [Damir Shamanaev](https://github.com/damirka)의 책 [Sui Move by Example](https://examples.sui.io/patterns/witness.html)을 기반으로 수정한 것입니다.*
 
-### The `phantom` Keyword
+### `phantom` 키워드
 
-In the above example, we want the `Guardian` type to have the `key` and `store` abilities, so that it's an asset and is transferrable and persists in global storage. 
+위 예제에서 `Guardian` 타입은 `key`와 `store` 능력을 가져야 하며, 이를 통해 자산으로 취급되고 전송 가능하며 글로벌 저장소에 유지될 수 있습니다.
 
-We also want to pass in the `witness` resource, `PEACE`, into `Guardian`, but `PEACE` only has the `drop` ability. Recall our previous discussion on [ability constraints](./2_intro_to_generics.md#ability-constraints) and inner types, the rule implies that `PEACE` should also have `key` and `storage` given that the outer type `Guardian` does. But in this case, we do not want to add unnecessary abilities to our `witness` type, because doing so could cause undesirable behaviors and vulnerabilities. 
+또한 `witness` 리소스인 `PEACE`를 `Guardian`에 전달하고자 하지만, `PEACE`는 `drop` 능력만 가지고 있습니다. 이전에 살펴본 [능력 제약(Ability Constraints)](./2_intro_to_generics.md#능력-제약-(Ability-Constraints))에 따르면, 외부 타입 `Guardian`이 `key`와 `store` 능력을 가지므로 `PEACE`도 이 능력을 가져야 합니다. 그러나 이 경우, `witness` 타입에 불필요한 능력을 추가하면 원하지 않는 동작이나 취약점을 초래할 수 있습니다.
 
-We can use the keyword `phantom` to get around this situation. When a type parameter is either not used inside the struct definition or is only used as an argument to another `phantom` type parameter, we can use the `phantom` keyword to ask the Move type system to relax the ability constraint rules on inner types. We see that `Guardian` doesn't use the type `T` in any of its fields, so we can safely declare `T` to be a `phantom` type. 
+이 문제를 해결하기 위해 `phantom` 키워드를 사용할 수 있습니다. 타입 매개변수가 구조체 정의에서 사용되지 않거나 다른 `phantom` 타입 매개변수에 인수로만 사용될 경우, `phantom` 키워드를 사용하여 Move 타입 시스템이 내부 타입의 능력 제약 규칙을 완화하도록 할 수 있습니다. `Guardian`이 필드에서 타입 `T`를 사용하지 않기 때문에 `T`를 `phantom` 타입으로 선언해도 안전합니다.
 
-For a more in-depth explanation of the `phantom` keyword, please check the [relevant section](https://github.com/move-language/move/blob/main/language/documentation/book/src/generics.md#phantom-type-parameters) of the Move language documentation.
+`phantom` 키워드에 대한 자세한 설명은 Move 언어 문서의 [관련 섹션](https://github.com/move-language/move/blob/main/language/documentation/book/src/generics.md#phantom-type-parameters)을 참고하세요.
 
-## One Time Witness
+## 일회성 Witness
 
-One Time Witness (OTW) is a sub-pattern of the Witness pattern, where we utilize the module `init` function to ensure that only one instance of the `witness` resource is created (so type `A` is guaranteed to be a singleton). 
+일회성 Witness (One Time Witness - OTW)는 Witness 패턴의 하위 패턴으로, 모듈의 `init` 함수를 사용하여 `witness` 리소스가 한 번만 생성되도록 보장합니다. 따라서 타입 `A`가 싱글톤으로 보장됩니다.
 
-In Sui Move a type is considered an OTW if its definition has the following properties:
+Sui Move에서 타입이 OTW로 간주되려면 다음 속성을 충족해야 합니다:
 
-- The type is named after the module but uppercased
-- The type only has the `drop` ability
+- 타입은 모듈 이름을 따서 대문자로 이름 지어야 합니다.
+- 타입은 `drop` 능력만 가져야 합니다.
 
-To get an instance of this type, you need to add it as the first argument to the module `init` function as in the above example. The Sui runtime will then generate the OTW struct automatically at module publish time. 
+이 타입의 인스턴스를 얻으려면 위 예제와 같이 모듈 `init` 함수의 첫 번째 인수로 추가해야 합니다. 그러면 Sui 런타임이 모듈 게시 시 자동으로 OTW 구조체를 생성합니다.
 
-The above example uses the One Time Witness design pattern to guarantee that `Guardian` is a singtleton.
+위 예제는 One Time Witness 디자인 패턴을 사용하여 `Guardian`이 싱글톤임을 보장합니다.
