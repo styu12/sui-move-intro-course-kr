@@ -44,7 +44,7 @@ export TREASURYCAP_ID=<이전 출력의 treasury cap 객체 ID>
 `MNG` 토큰을 발행하려면 다음 CLI 명령어를 사용할 수 있습니다:
 
 ```bash
-    sui client call --function mint --module managed --package $PACKAGE_ID --args $TREASURYCAP_ID <발행할 양> <수신자 주소> --gas-budget 10000000
+    sui client call --function mint --module managed --package $PACKAGE_ID --args $TREASURYCAP_ID <발행할 양> <수신자 주소> --gas-budget 10000000   
 ```
 
 ![Minting](../images/minting.png)
