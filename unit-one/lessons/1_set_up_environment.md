@@ -55,19 +55,15 @@ Sui Move 튜토리얼 과정에 오신 것을 환영합니다. 첫 번째 챕터
 
 ## (선택 사항) VS Code 플러그인 설정
 
-### Move Analyzer
+### Move
 
 Move 언어로 프로그래밍할 때, Move 문법에 따라 하이라이팅해주는 도구로 Move 코드를 작성할 때 유용한 도구입니다.
 
-![Move Analyzer Capture](../images/vscode_move_analyzer.png)
+![Move Capture](../images/vscode_move.png)
 
-1. VS Marketplace에서 [Move Analyzer 플러그인](https://marketplace.visualstudio.com/items?itemName=move.move-analyzer) 설치
+- VS Marketplace에서 Mysten Labs의 [Move 플러그인](https://marketplace.visualstudio.com/items?itemName=mysten.move) 설치
 
-`move`에서 만든 move-analyzer를 사용해야 합니다.
-
-2. Sui 스타일 지갑 주소와의 호환성 추가:
-
-    `cargo install --git https://github.com/move-language/move move-analyzer --features "address20"`
+Mysten Labs에서 만든 move를 사용하시길 추천드립니다.
 
 
 ### Sui Extension
