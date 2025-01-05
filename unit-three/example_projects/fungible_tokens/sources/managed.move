@@ -33,5 +33,11 @@ module fungible_tokens::managed {
     public fun burn(treasury_cap: &mut TreasuryCap<MANAGED>, coin: Coin<MANAGED>) {
         coin::burn(treasury_cap, coin);
     }
+
+    #[test_only]
+    /// Wrapper of module initializer for testing
+    public fun test_init(ctx: &mut TxContext) {
+        init(MANAGED {}, ctx)
+    }
 }
 
